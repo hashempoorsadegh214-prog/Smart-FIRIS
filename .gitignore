@@ -1,11 +1,31 @@
-# نادیده گرفتن رسترهای سنگین و فایل‌های حجیم
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Virtual Environment
+venv/
+env/
+.env
+
+# Large GIS & Raster data (جلوگیری از آپلود فایل‌های حجیم)
 *.tif
 *.tiff
-*.zip
+*.dem
+*.asc
+*.nc
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
 
-# فایل‌های موقت پایتون
-__pycache__/
-*.pyc
+# IDEs & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
 
-# خروجی‌های موقت
-outputs/
+# Output maps and temporary files
+outputs/maps/*
+!outputs/maps/.gitkeep

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سامانه پیش‌بینی خطر حریق استان فارس (Smart-FIRIS)</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Tahoma, 'Segoe UI', sans-serif;
+        }
+        body, html {
+            height: 100%;
+            width: 100%;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        /* نوار عنوان بالا */
+        .title-box {
+            position: absolute;
+            top: 15px;
+            right: 60px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 18px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            border-right: 5px solid #d32f2f;
+        }
+        .title-box h1 {
+            font-size: 16px;
+            color: #222;
+        }
+        .title-box p {
+            font-size: 11px;
+            color: #666;
+            margin-top: 3px;
+        }
+        /* راهنمای نقشه (Legend) */
+        .legend {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 16px;
+            line-height: 22px;
+            color: #333;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            font-size: 12px;
+            min-width: 160px;
+        }
+        .legend h4 {
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #111;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 4px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        .color-box {
+            width: 18px;
+            height: 18px;
+            margin-left: 8px;
+            border-radius: 3px;
+            border: 1px solid rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="title-box">
+        <h1>سامانه پایش و ارزیابی خطر حریق (Smart-FIRIS)</h1>
+        <p>منطقه تحت پوشش: استان فارس | مدل ترکیب خطی وزنی (WLC)</p>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // ۱. ایجاد نقشه با مرکزیت استان فارس
+        var map = L.map('map', {
+            center: [29.3, 53.1],
+            zoom: 7,
+            minZoom: 6,
+            maxZoom: 13
+        });
+
+        // ۲. لایه‌های نقشه پایه (Basemaps)
+        var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '© Esri, Maxar, Earthstar Geographics'
+        });
+
+        var baseMaps = {
+            "نقشه خیابانی (OSM)": osm,
+            "تصویر ماهواره‌ای": satellite
+        };
+
+        // ۳. لود کردن لایه خروجی خطر حریق و محدوده جغرافیایی
+        fetch('data/bounds.json')
+            .then(res => res.json())
+            .then(meta => {
+                var overlayBounds = meta.bounds;
+                var hazardLayer = L.imageOverlay('data/hazard_overlay.png', overlayBounds, {
+                    opacity: 0.75,
+                    interactive: true
+                }).addTo(map);
+
+                // اضافه کردن به کنترل لایه‌ها
+                var overlayMaps = {
+                    "نقشه خطر حریق (۵ کلاسه)": hazardLayer
+                };
+                L.control.layers(baseMaps, overlayMaps, { position: 'topleft', collapsed: false }).addTo(map);
+                
+                // زوم اتوماتیک به محدوده استان
+                map.fitBounds(overlayBounds);
+            })
+            .catch(err => {
+                console.warn('لایه محلی خطر هنوز ساخته نشده است. کنترل پیش‌فرض فعال شد.');
+                L.control.layers(baseMaps, null, { position: 'topleft' }).addTo(map);
+            });
+
+        // ۴. افزودن راهنمای ۵ کلاسه (Legend) به گوشه پایین-راست
+        var legend = L.control({ position: 'bottomright' });
+
+        legend.onAdd = function (map) {
+            var div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = `
+                <h4>طبقات خطر حریق</h4>
+                <div class="legend-item"><span class="color-box" style="background: #730000;"></span>بسیار زیاد (بحرانی)</div>
+                <div class="legend-item"><span class="color-box" style="background: #E64C00;"></span>زیاد</div>
+                <div class="legend-item"><span class="color-box" style="background: #FFAA00;"></span>متوسط</div>
+                <div class="legend-item"><span class="color-box" style="background: #A8A800;"></span>کم</div>
+                <div class="legend-item"><span class="color-box" style="background: #267300;"></span>بسیار کم</div>
+            `;
+            return div;
+        };
+
+        legend.addTo(map);
+    </script>
+</body>
+</html>

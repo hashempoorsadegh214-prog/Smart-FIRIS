@@ -1,0 +1,37 @@
+/* استایل‌های پایه برای سامانه Smart-FIRIS */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    font-family: Tahoma, 'Segoe UI', sans-serif;
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+}
+
+/* باکس عنوان روی نقشه */
+.title-box {
+    position: absolute;
+    top: 15px;
+    right: 60px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 10px 15px;
+    border-radius: 5px;
+    border-right: 5px solid #d32f2f;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+/* راهنمای کلاس‌های خطر */
+.legend {
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 12px;
+}
+.legend h4 { margin: 0 0 5px 0; }
+.legend-item { display: flex; align-items: center; margin-top: 3px; }
+.color-box { width: 15px; height: 15px; margin-left: 5px; border: 1px solid #ccc; }
